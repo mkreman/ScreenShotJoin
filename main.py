@@ -36,7 +36,7 @@ class App:
     def options(self):
         options_window = Toplevel(bg=self.variables[self.bg_color])
         options_window.title('Options')
-        logo = PhotoImage(file='images/logo.png')
+        logo = PhotoImage(file='./images/logo.png')
         options_window.iconphoto(False, logo)
 
         self.changes = []
@@ -185,7 +185,7 @@ class App:
     def run(self):
         self.main_panel = Tk()
         self.main_panel.title('Screen Shot Join')
-        logo = PhotoImage(file='images/logo.png')
+        logo = PhotoImage(file='./images/logo.png')
         self.main_panel.iconphoto(False, logo)
         
         self.variables = get_variable_values()
@@ -273,28 +273,28 @@ class App:
 
         minus_button_image = PhotoImage(file='./images/minus.png')
         Button(master=button_frame,
-               bg=self.variables[self.button_bg_color],
+               bg=self.variables[self.bg_color],
                bd=0,
                image=minus_button_image,
-               command=lambda: [self.delete()]).pack(side=RIGHT)
+               command=lambda: [self.delete()]).pack(side='right')
         plus_button_image = PhotoImage(file='./images/plus.png')
         Button(master=button_frame,
-               bg=self.variables[self.button_bg_color],
+               bg=self.variables[self.bg_color],
                bd=0,
                image=plus_button_image,
-               command=lambda: [self.add_more_images()]).pack(side=RIGHT)
+               command=lambda: [self.add_more_images()]).pack(side='right')
         down_button_image = PhotoImage(file='./images/down.png')
         Button(master=button_frame,
-               bg=self.variables[self.button_bg_color],
+               bg=self.variables[self.bg_color],
                bd=0,
                image=down_button_image,
-               command=lambda: [self.move_down()]).pack(side=RIGHT)
+               command=lambda: [self.move_down()]).pack(side='right')
         up_button_image = PhotoImage(file='./images/up.png')
         Button(master=button_frame,
-               bg=self.variables[self.button_bg_color],
+               bg=self.variables[self.bg_color],
                bd=0,
                image=up_button_image,
-               command=lambda: [self.move_up()]).pack(side=RIGHT)
+               command=lambda: [self.move_up()]).pack(side='right')
 
         scrollbar_y = Scrollbar(image_list_frame)
         scrollbar_y.pack(side='right', fill='y')
