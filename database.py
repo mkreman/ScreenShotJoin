@@ -11,18 +11,6 @@ if not os.path.exists(os.path.join(app_data_location, 'DataBase.db')):
 conn = sqlite3.connect(os.path.join(app_data_location, 'DataBase.db'))
 
 c = conn.cursor()
-# c.execute("""CREATE TABLE meta_values (
-#             Variables text,
-#             Entries text
-#             )""")
-# c.execute("""CREATE TABLE LightTheme (
-#             Variables text,
-#             Entries text
-#             )""")
-# c.execute("""CREATE TABLE DarkTheme (
-#             Variables text,
-#             Entries text
-#             )""")
 
 
 def get_variable_values():
@@ -72,19 +60,5 @@ class Database:
             c.execute(command, {'variable': variable})
 
 
-# Database.insert_meta_value('theme', 'LightTheme')
-# Database.insert_meta_value('output_dir', os.path.join(os.path.expanduser('~'), 'Pictures', 'ScreenShotJoin'))
-
-# Database.insert_theme_value('LightTheme', 'fg_color', '#000000')
-# Database.insert_theme_value('LightTheme', 'entry_bg_color', '#f2f2f2')
-# Database.insert_theme_value('LightTheme', 'bg_color', '#c0c0c0')
-# Database.insert_theme_value('LightTheme', 'font', 'Cambria')
-# Database.insert_theme_value('LightTheme', 'button_size', '12')
-# Database.insert_theme_value('LightTheme', 'font_size', '14')
-#
-# Database.insert_theme_value('DarkTheme', 'fg_color', '#ffffff')
-# Database.insert_theme_value('DarkTheme', 'entry_bg_color', '#525252')
-# Database.insert_theme_value('DarkTheme', 'bg_color', '#404040')
-# Database.insert_theme_value('DarkTheme', 'font', 'Cambria')
-# Database.insert_theme_value('DarkTheme', 'button_size', '12')
-# Database.insert_theme_value('DarkTheme', 'font_size', '14')
+if get_variable_values()['output_dir'] == '':
+    Database.insert_meta_value('output_dir', os.path.join(os.path.expanduser('~'), 'Pictures', 'ScreenShotJoin'))
