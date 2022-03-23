@@ -1,6 +1,5 @@
 import os.path
 from tkinter import *
-from tkinter.ttk import Combobox
 from tkinter import filedialog, messagebox
 from PIL import Image
 from database import *
