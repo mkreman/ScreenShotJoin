@@ -14,7 +14,9 @@ def browse_images():
 
 
 class App:
-    def __init__(self):
+    def __init__(self, master):
+        self.main_panel = master
+
         self.new_direction = None
         self.new_output_dir = None
         self.theme_value = None
@@ -33,7 +35,6 @@ class App:
         self.image_string = None
         self.list_box = None
         self.direction = None
-        self.main_panel = None
 
         self.font_list = Database.font_list
 
@@ -49,6 +50,62 @@ class App:
         self.font = self.theme_values['font']
         self.font_size = self.theme_values['font_size']
         self.button_size = int(self.theme_values['button_size'])
+
+        # Name of images depending on theme
+        if self.theme == 'Dark':
+            self.move_up_image = './images/white_move_up.png'
+            self.move_down_image = './images/white_move_down.png'
+            self.delete_image = './images/white_delete.png'
+            self.add_image = './images/white_add.png'
+        else:
+            self.move_up_image = './images/dark_move_up.png'
+            self.move_down_image = './images/dark_move_down.png'
+            self.delete_image = './images/dark_delete.png'
+            self.add_image = './images/dark_add.png'
+
+        # Start building main window
+        self.main_panel.title('Screen Shot Join')
+        logo = PhotoImage(file='./images/logo.png')
+        self.main_panel.iconphoto(False, logo)
+
+        # Creating Menubar
+        menu_bar = Menu(self.main_panel, background=self.bg_color, fg=self.fg_color)
+        # File menu
+        file_menu = Menu(menu_bar, tearoff=0, background=self.bg_color, fg=self.fg_color)
+        menu_bar.add_cascade(label="Settings", menu=file_menu)
+
+        file_menu.add_command(label='Options', command=self.options)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=lambda: [self.main_panel.destroy()])
+
+        self.main_panel.config(bg=self.bg_color, menu=menu_bar)
+
+        self.direction = "Horizontal"
+
+        first_frame = Frame(self.main_panel, bg=self.bg_color)
+        Label(master=first_frame,
+              bg=self.bg_color,
+              fg=self.fg_color,
+              font=(self.font, 14),
+              text="Select and Join Images").grid(row=0, column=0, columnspan=2, padx=5, pady=5)
+
+        second_frame = Frame(self.main_panel, bg=self.bg_color)
+
+        self.browse_images_button = Button(master=second_frame,
+                                           bg=self.bg_color,
+                                           fg=self.fg_color,
+                                           font=(self.font, self.button_size),
+                                           bd=2,
+                                           height=1,
+                                           width=15,
+                                           text='Browse Images',
+                                           command=lambda: [self.list_of_images(browse_images())])
+        self.browse_images_button.grid(row=1, column=0, padx=5, pady=5)
+
+        first_frame.pack(side='top')
+        second_frame.pack(side='top')
+        self.main_panel.minsize(700, 150)
+        self.main_panel.mainloop()
 
     def options(self):
         self.setting_window = Toplevel()
@@ -132,7 +189,7 @@ class App:
         font_drop.grid(row=2, column=1, padx=10, pady=5, sticky=W)
         font_drop["menu"]["background"] = self.bg_color
         for x in range(len(orientations)):
-            font_drop['menu'].entryconfig(x, font=(self.font, 14))
+            font_drop['menu'].entryconfig(x, font=(self.font, 14), foreground=self.fg_color)
         font_drop["menu"]["activeborderwidth"] = '2'
 
         Label(master=self.right_top_frame,
@@ -202,9 +259,12 @@ class App:
         self.setting_window.mainloop()
 
     def change_settings(self, window_destroy):
+        # If orientation changed refresh the preview window
         if self.direction != self.new_direction.get():
             self.direction = self.new_direction.get()
             self.show_preview()
+
+        # If output directory is changed
         if self.output_dir != self.new_output_dir and self.new_output_dir is not None:
             self.output_dir = self.new_output_dir
             self.variables['output_dir'] = self.output_dir
@@ -218,7 +278,7 @@ class App:
             self.theme = self.variables['theme'][:-5]
 
             # Updating font value
-            Database.update_theme_value(self.theme, 'font', self.font_value_var.get())\
+            Database.update_theme_value(self.variables['theme'], 'font', self.font_value_var.get())\
                 if self.font_value_var.get() != self.font else None
             self.theme_values['font'] = self.font_value_var.get()
 
@@ -227,6 +287,18 @@ class App:
             self.entry_bg_color = self.theme_values['entry_bg_color']
             self.bg_color = self.theme_values['bg_color']
             self.font = self.theme_values['font']
+
+            # Updating the names of the button's images according to the theme
+            if self.theme == 'Dark':
+                self.move_up_image = './images/white_move_up.png'
+                self.move_down_image = './images/white_move_down.png'
+                self.delete_image = './images/white_delete.png'
+                self.add_image = './images/white_add.png'
+            else:
+                self.move_up_image = './images/dark_move_up.png'
+                self.move_down_image = './images/dark_move_down.png'
+                self.delete_image = './images/dark_delete.png'
+                self.add_image = './images/dark_add.png'
 
             # Changing theme of currently open widgets
             self.change_theme(self.main_panel)
@@ -252,7 +324,24 @@ class App:
                 else:
                     widget.config(font=(self.font, self.font_size), bg=self.bg_color, fg=self.fg_color)
             elif widget.winfo_class() == 'Button':
-                widget.config(font=(self.font, self.button_size), bg=self.bg_color, fg=self.fg_color)
+                if str(widget).split('.')[-1] == 'add_button':
+                    global add_image
+                    add_image = PhotoImage(file=self.add_image)
+                    widget.config(image=add_image, bg=self.bg_color)
+                elif str(widget).split('.')[-1] == 'delete_button':
+                    global delete_image
+                    delete_image = PhotoImage(file=self.delete_image)
+                    widget.config(image=delete_image, bg=self.bg_color)
+                elif str(widget).split('.')[-1] == 'move_up':
+                    global move_up_image
+                    move_up_image = PhotoImage(file=self.move_up_image)
+                    widget.config(image=move_up_image, bg=self.bg_color)
+                elif str(widget).split('.')[-1] == 'move_down':
+                    global move_down_image
+                    move_down_image = PhotoImage(file=self.move_down_image)
+                    widget.config(image=move_down_image, bg=self.bg_color)
+                else:
+                    widget.config(font=(self.font, self.button_size), bg=self.bg_color, fg=self.fg_color)
             elif widget.winfo_class() == 'Menu':
                 widget.winfo_children()[0].config(background=self.bg_color, fg=self.fg_color)
             elif widget.winfo_class() == 'Entry':
@@ -308,65 +397,24 @@ class App:
                 self.new_im.paste(im, (x_offset, y_offset))
                 y_offset += im.size[1]
             return_value = ImageTk.PhotoImage(self.new_im.resize(
-                (int((self.main_panel.winfo_height() / 2)*final_width/final_height), self.main_panel.winfo_height() // 2),
-                Image.ANTIALIAS))
+                (int((self.main_panel.winfo_height() / 2)*final_width/final_height),
+                 self.main_panel.winfo_height() // 2), Image.ANTIALIAS))
 
         if save:
+            # Create output folder if not exist
+            if not os.path.exists(self.output_dir):
+                os.mkdir(self.output_dir)
+            # Get a unique output file_name
             file_name = os.path.join(self.output_dir, self.images[0].split('/')[-1].split('.')[0] + '_joined.png')
             while os.path.exists(file_name):
                 file_name = file_name[:-11] + '_' + file_name[-11:]
+
+            # Save output image
             self.new_im.save(file_name)
             messagebox.showinfo("Success", "Combined image is saved!")
             self.clear_list_box()
 
         return return_value
-
-    def run(self):
-        self.main_panel = Tk()
-        self.main_panel.title('Screen Shot Join')
-        logo = PhotoImage(file='./images/logo.png')
-        self.main_panel.iconphoto(False, logo)
-
-        # Creating Menubar
-        menu_bar = Menu(self.main_panel, background=self.bg_color, fg=self.fg_color)
-        # File menu
-        file_menu = Menu(menu_bar, tearoff=0, background=self.bg_color, fg=self.fg_color)
-        menu_bar.add_cascade(label="Settings", menu=file_menu)
-
-        file_menu.add_command(label='Options', command=self.options)
-        file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=lambda: [self.main_panel.destroy()])
-
-        self.main_panel.config(bg=self.bg_color, menu=menu_bar)
-
-        self.direction = "Horizontal"
-        if not os.path.exists(os.path.join(os.path.expanduser('~'), 'Pictures', 'ScreenShotJoin')):
-            os.mkdir(os.path.join(os.path.expanduser('~'), 'Pictures', 'ScreenShotJoin'))
-
-        first_frame = Frame(self.main_panel, bg=self.bg_color)
-        Label(master=first_frame,
-              bg=self.bg_color,
-              fg=self.fg_color,
-              font=(self.font, 14),
-              text="Select and Join Images").grid(row=0, column=0, columnspan=2, padx=5, pady=5)
-
-        second_frame = Frame(self.main_panel, bg=self.bg_color)
-
-        self.browse_images_button = Button(master=second_frame,
-                                           bg=self.bg_color,
-                                           fg=self.fg_color,
-                                           font=(self.font, self.button_size),
-                                           bd=2,
-                                           height=1,
-                                           width=15,
-                                           text='Browse Images',
-                                           command=lambda: [self.list_of_images(browse_images())])
-        self.browse_images_button.grid(row=1, column=0, padx=5, pady=5)
-
-        first_frame.pack(side='top')
-        second_frame.pack(side='top')
-        self.main_panel.minsize(700, 150)
-        self.main_panel.mainloop()
 
     def move_up(self):
         idx = self.list_box.curselection()
@@ -436,37 +484,41 @@ class App:
         button_frame = Frame(third_left_frame, bg=self.bg_color)
         image_list_frame = Frame(third_left_frame, bg=self.bg_color)
 
-        global minus_button_image
-        minus_button_image = PhotoImage(file='./images/minus.png')
+        global delete_image
+        delete_image = PhotoImage(file=self.delete_image)
         Button(master=button_frame,
                bg=self.bg_color,
                bd=0,
-               image=minus_button_image,
+               image=delete_image,
+               name='delete_button',
                command=lambda: [self.delete()]).pack(side='right', padx=(0, 25))
 
-        global plus_button_image
-        plus_button_image = PhotoImage(file='./images/plus.png')
+        global add_image
+        add_image = PhotoImage(file=self.add_image)
         Button(master=button_frame,
                bg=self.bg_color,
                bd=0,
-               image=plus_button_image,
-               command=lambda: [self.add_more_images()]).pack(side='right')
+               image=add_image,
+               name='add_button',
+               command=lambda: [self.add_more_images()]).pack(side='right', padx=4)
 
         global down_button_image
-        down_button_image = PhotoImage(file='./images/down.png')
+        down_button_image = PhotoImage(file=self.move_down_image)
         Button(master=button_frame,
                bg=self.bg_color,
                bd=0,
                image=down_button_image,
-               command=lambda: [self.move_down()]).pack(side='right')
+               name='move_down',
+               command=lambda: [self.move_down()]).pack(side='right', padx=4)
 
         global up_button_image
-        up_button_image = PhotoImage(file='./images/up.png')
+        up_button_image = PhotoImage(file=self.move_up_image)
         Button(master=button_frame,
                bg=self.bg_color,
                bd=0,
                image=up_button_image,
-               command=lambda: [self.move_up()]).pack(side='right')
+               name='move_up',
+               command=lambda: [self.move_up()]).pack(side='right', padx=4)
 
         scrollbar_y = Scrollbar(image_list_frame)
         scrollbar_y.pack(side='right', fill='y')
@@ -530,12 +582,10 @@ class App:
         self.image_preview_label.config(image='')
 
 
-def restart_application(window):
-    window.destroy()
-    new_instance = App()
-    new_instance.run()
+def new_app_instance():
+    new_new_instance = Tk()
+    App(new_new_instance)
 
 
 if __name__ == '__main__':
-    app_instance = App()
-    app_instance.run()
+    new_app_instance()
