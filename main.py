@@ -1,6 +1,8 @@
+import os.path
 from tkinter import *
+from tkinter.ttk import Combobox
 from tkinter import filedialog, messagebox
-from PIL import Image, ImageTk
+from PIL import Image
 from database import *
 
 
@@ -17,6 +19,13 @@ class App:
     def __init__(self, master):
         self.main_panel = master
 
+        self.combined_image = None
+        self.final_width = None
+        self.final_height = None
+        self.move_down_button_image = None
+        self.move_up_button_image = None
+        self.delete_button_image = None
+        self.add_button_image = None
         self.new_direction = None
         self.new_output_dir = None
         self.theme_value = None
@@ -53,20 +62,19 @@ class App:
 
         # Name of images depending on theme
         if self.theme == 'Dark':
-            self.move_up_image = './images/white_move_up.png'
-            self.move_down_image = './images/white_move_down.png'
-            self.delete_image = './images/white_delete.png'
-            self.add_image = './images/white_add.png'
+            self.move_up_image_name = './images/white_move_up.png'
+            self.move_down_image_name = './images/white_move_down.png'
+            self.delete_button_image_name = './images/white_delete.png'
+            self.add_button_image_name = './images/white_add.png'
         else:
-            self.move_up_image = './images/dark_move_up.png'
-            self.move_down_image = './images/dark_move_down.png'
-            self.delete_image = './images/dark_delete.png'
-            self.add_image = './images/dark_add.png'
+            self.move_up_image_name = './images/dark_move_up.png'
+            self.move_down_image_name = './images/dark_move_down.png'
+            self.delete_button_image_name = './images/dark_delete.png'
+            self.add_button_image_name = './images/dark_add.png'
 
         # Start building main window
         self.main_panel.title('Screen Shot Join')
-        logo = PhotoImage(file='./images/logo.png')
-        self.main_panel.iconphoto(False, logo)
+        self.main_panel.iconbitmap('./images/logo.ico')
 
         # Creating Menubar
         menu_bar = Menu(self.main_panel, background=self.bg_color, fg=self.fg_color)
@@ -76,6 +84,7 @@ class App:
 
         file_menu.add_command(label='Options', command=self.options)
         file_menu.add_separator()
+        file_menu.add_command(label="New...", command=lambda: [new_app_instance()])
         file_menu.add_command(label="Exit", command=lambda: [self.main_panel.destroy()])
 
         self.main_panel.config(bg=self.bg_color, menu=menu_bar)
@@ -104,15 +113,14 @@ class App:
 
         first_frame.pack(side='top')
         second_frame.pack(side='top')
-        self.main_panel.minsize(700, 150)
+        self.main_panel.minsize(1000, 150)
         self.main_panel.mainloop()
 
     def options(self):
         self.setting_window = Toplevel()
         self.setting_window.title('Settings')
         # Icon of the main window
-        p = PhotoImage(file='images/settings.png')
-        self.setting_window.iconphoto(False, p)
+        self.setting_window.iconbitmap('./images/setting.ico')
 
         border_color = "black" if self.theme == 'Light' else "white"
         left_frame = Frame(master=self.setting_window, bg=self.bg_color, highlightbackground=border_color,
@@ -290,15 +298,15 @@ class App:
 
             # Updating the names of the button's images according to the theme
             if self.theme == 'Dark':
-                self.move_up_image = './images/white_move_up.png'
-                self.move_down_image = './images/white_move_down.png'
-                self.delete_image = './images/white_delete.png'
-                self.add_image = './images/white_add.png'
+                self.move_up_image_name = './images/white_move_up.png'
+                self.move_down_image_name = './images/white_move_down.png'
+                self.delete_button_image_name = './images/white_delete.png'
+                self.add_button_image_name = './images/white_add.png'
             else:
-                self.move_up_image = './images/dark_move_up.png'
-                self.move_down_image = './images/dark_move_down.png'
-                self.delete_image = './images/dark_delete.png'
-                self.add_image = './images/dark_add.png'
+                self.move_up_image_name = './images/dark_move_up.png'
+                self.move_down_image_name = './images/dark_move_down.png'
+                self.delete_button_image_name = './images/dark_delete.png'
+                self.add_button_image_name = './images/dark_add.png'
 
             # Changing theme of currently open widgets
             self.change_theme(self.main_panel)
@@ -325,21 +333,17 @@ class App:
                     widget.config(font=(self.font, self.font_size), bg=self.bg_color, fg=self.fg_color)
             elif widget.winfo_class() == 'Button':
                 if str(widget).split('.')[-1] == 'add_button':
-                    global add_image
-                    add_image = PhotoImage(file=self.add_image)
-                    widget.config(image=add_image, bg=self.bg_color)
+                    self.add_button_image = PhotoImage(master=self.main_panel, file=self.add_button_image_name)
+                    widget.config(image=self.add_button_image, bg=self.bg_color)
                 elif str(widget).split('.')[-1] == 'delete_button':
-                    global delete_image
-                    delete_image = PhotoImage(file=self.delete_image)
-                    widget.config(image=delete_image, bg=self.bg_color)
+                    self.delete_button_image = PhotoImage(master=self.main_panel, file=self.delete_button_image_name)
+                    widget.config(image=self.delete_button_image, bg=self.bg_color)
                 elif str(widget).split('.')[-1] == 'move_up':
-                    global move_up_image
-                    move_up_image = PhotoImage(file=self.move_up_image)
-                    widget.config(image=move_up_image, bg=self.bg_color)
+                    self.move_up_button_image = PhotoImage(master=self.main_panel, file=self.move_up_image_name)
+                    widget.config(image=self.move_up_button_image, bg=self.bg_color)
                 elif str(widget).split('.')[-1] == 'move_down':
-                    global move_down_image
-                    move_down_image = PhotoImage(file=self.move_down_image)
-                    widget.config(image=move_down_image, bg=self.bg_color)
+                    self.move_down_button_image = PhotoImage(master=self.main_panel, file=self.move_down_image_name)
+                    widget.config(image=self.move_down_button_image, bg=self.bg_color)
                 else:
                     widget.config(font=(self.font, self.button_size), bg=self.bg_color, fg=self.fg_color)
             elif widget.winfo_class() == 'Menu':
@@ -357,48 +361,48 @@ class App:
                 self.change_theme(widget, flag=flag)
 
     def combine_images(self, save=False):
-        global final_width, final_height
+        self.main_panel.minsize(1000, 700)
+        self.main_panel.state('zoomed')
         if not self.images:
-            return
+            return None
         elif len(self.images) == 1:
             messagebox.showerror("Error", "Please select more than one image")
-            return
+            return None
         images = [Image.open(x) for x in self.images]
         widths, heights = zip(*(i.size for i in images))
-
-        return_value = None
-        self.main_panel.state('zoomed')
 
         if self.direction == "Horizontal":
             x_offset = 0
             y_offset = 0
-            final_width = sum(widths)
-            final_height = max(heights)
+            self.final_width = sum(widths)
+            self.final_height = max(heights)
 
-            self.new_im = Image.new('RGB', (final_width, final_height))
+            self.new_im = Image.new('RGB', (self.final_width, self.final_height))
 
             for im in images:
                 self.new_im.paste(im, (x_offset, y_offset))
                 x_offset += im.size[0]
 
-            return_value = ImageTk.PhotoImage(self.new_im.resize(
-                (self.main_panel.winfo_width() // 2, int((self.main_panel.winfo_width() / 2)*final_height/final_width)),
-                Image.ANTIALIAS))
+            self.new_im.resize(
+                (self.main_panel.winfo_width() // 2,
+                 int((self.main_panel.winfo_width() / 2)*self.final_height/self.final_width)),
+                Image.ANTIALIAS).save(os.path.join(app_data_location, 'temp.png'))
 
         elif self.direction == "Vertical":
             x_offset = 0
             y_offset = 0
-            final_height = sum(heights)
-            final_width = max(widths)
+            self.final_height = sum(heights)
+            self.final_width = max(widths)
 
-            self.new_im = Image.new('RGB', (final_width, final_height))
+            self.new_im = Image.new('RGB', (self.final_width, self.final_height))
 
             for im in images:
                 self.new_im.paste(im, (x_offset, y_offset))
                 y_offset += im.size[1]
-            return_value = ImageTk.PhotoImage(self.new_im.resize(
-                (int((self.main_panel.winfo_height() / 2)*final_width/final_height),
-                 self.main_panel.winfo_height() // 2), Image.ANTIALIAS))
+            self.new_im.resize(
+                (int((self.main_panel.winfo_height() / 2)*self.final_width/self.final_height),
+                 self.main_panel.winfo_height() // 2),
+                Image.ANTIALIAS).save(os.path.join(app_data_location, 'temp.png'))
 
         if save:
             # Create output folder if not exist
@@ -414,7 +418,7 @@ class App:
             messagebox.showinfo("Success", "Combined image is saved!")
             self.clear_list_box()
 
-        return return_value
+        return os.path.join(app_data_location, 'temp.png')
 
     def move_up(self):
         idx = self.list_box.curselection()
@@ -461,16 +465,17 @@ class App:
         for widget in self.third_right_frame.winfo_children():
             widget.destroy()
 
-        global combined_image
         Label(master=self.third_right_frame,
-              text='Image Preview',
+              text='Output Image Preview',
               fg=self.fg_color,
               bg=self.bg_color,
               font=(self.font, self.font_size)).pack(side='top', padx=5, pady=5, fill=X)
 
-        combined_image = self.combine_images()
-        self.image_preview_label = Label(master=self.third_right_frame, image=combined_image, bg=self.bg_color)
-        self.image_preview_label.pack(side='top', fill=BOTH, expand=True)
+        preview_img = self.combine_images()
+        if preview_img:
+            self.combined_image = PhotoImage(master=self.main_panel, file=preview_img)
+            self.image_preview_label = Label(master=self.third_right_frame, image=self.combined_image, bg=self.bg_color)
+            self.image_preview_label.pack(side='top', fill=BOTH, expand=True)
 
     def list_of_images(self, images):
         self.browse_images_button.config(state=DISABLED)
@@ -484,39 +489,35 @@ class App:
         button_frame = Frame(third_left_frame, bg=self.bg_color)
         image_list_frame = Frame(third_left_frame, bg=self.bg_color)
 
-        global delete_image
-        delete_image = PhotoImage(file=self.delete_image)
+        self.delete_button_image = PhotoImage(master=self.main_panel, file=self.delete_button_image_name)
         Button(master=button_frame,
                bg=self.bg_color,
                bd=0,
-               image=delete_image,
+               image=self.delete_button_image,
                name='delete_button',
                command=lambda: [self.delete()]).pack(side='right', padx=(0, 25))
 
-        global add_image
-        add_image = PhotoImage(file=self.add_image)
+        self.add_button_image = PhotoImage(master=self.main_panel, file=self.add_button_image_name)
         Button(master=button_frame,
                bg=self.bg_color,
                bd=0,
-               image=add_image,
+               image=self.add_button_image,
                name='add_button',
                command=lambda: [self.add_more_images()]).pack(side='right', padx=4)
 
-        global down_button_image
-        down_button_image = PhotoImage(file=self.move_down_image)
+        self.move_down_button_image = PhotoImage(master=self.main_panel, file=self.move_down_image_name)
         Button(master=button_frame,
                bg=self.bg_color,
                bd=0,
-               image=down_button_image,
+               image=self.move_down_button_image,
                name='move_down',
                command=lambda: [self.move_down()]).pack(side='right', padx=4)
 
-        global up_button_image
-        up_button_image = PhotoImage(file=self.move_up_image)
+        self.move_up_button_image = PhotoImage(master=self.main_panel, file=self.move_up_image_name)
         Button(master=button_frame,
                bg=self.bg_color,
                bd=0,
-               image=up_button_image,
+               image=self.move_up_button_image,
                name='move_up',
                command=lambda: [self.move_up()]).pack(side='right', padx=4)
 
@@ -583,8 +584,8 @@ class App:
 
 
 def new_app_instance():
-    new_new_instance = Tk()
-    App(new_new_instance)
+    new_instance = Tk()
+    App(new_instance)
 
 
 if __name__ == '__main__':
