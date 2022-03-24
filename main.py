@@ -18,6 +18,8 @@ class App:
     def __init__(self, master):
         self.main_panel = master
 
+        self.mode = StringVar(value='Original')
+        self.image_bg_color = StringVar(value='Black')
         self.combined_image = None
         self.final_width = None
         self.final_height = None
@@ -182,20 +184,32 @@ class App:
             font_option_menu.children['menu'].entryconfig(x, foreground=self.fg_color)
         font_option_menu["menu"]["activeborderwidth"] = '2'
 
-        orientations = ["Vertical", "Horizontal"]
+        Label(master=self.right_top_frame, text="Mode", font=(self.font, self.font_size), fg=self.fg_color,
+              bg=self.bg_color).grid(row=2, column=0, padx=10, pady=4, sticky=E)
+
+        mode_option_menu = OptionMenu(self.right_top_frame, self.mode, *['Original', 'Stretch'])
+        mode_option_menu.config(font=(self.font, self.button_size),
+                                bd=2,
+                                fg=self.fg_color,
+                                bg=self.entry_bg_color)
+        mode_option_menu.grid(padx=10, pady=5, row=2, column=1, sticky=W)
+        mode_option_menu["menu"]["background"] = self.entry_bg_color
+        for x in range(int(mode_option_menu['menu'].index('end')) + 1):
+            mode_option_menu['menu'].entryconfig(x, font=(self.font, self.font_size), foreground=self.fg_color)
+        mode_option_menu["menu"]["activeborderwidth"] = '2'
 
         Label(master=self.right_top_frame,
               bg=self.bg_color,
               fg=self.fg_color,
               font=(self.font, 14),
-              text="Choose Orientation").grid(row=2, column=0, padx=10, pady=5, sticky=E)
+              text="Choose Orientation").grid(row=3, column=0, padx=10, pady=5, sticky=E)
 
         self.new_direction = StringVar(value=self.direction)
-        font_drop = OptionMenu(self.right_top_frame, self.new_direction, *orientations)
+        font_drop = OptionMenu(self.right_top_frame, self.new_direction, *["Vertical", "Horizontal"])
         font_drop.config(bg=self.entry_bg_color, font=(self.font, self.button_size), bd=2, fg=self.fg_color)
-        font_drop.grid(row=2, column=1, padx=10, pady=5, sticky=W)
-        font_drop["menu"]["background"] = self.bg_color
-        for x in range(len(orientations)):
+        font_drop.grid(row=3, column=1, padx=10, pady=5, sticky=W)
+        font_drop["menu"]["background"] = self.entry_bg_color
+        for x in range(int(font_drop['menu'].index('end')) + 1):
             font_drop['menu'].entryconfig(x, font=(self.font, 14), foreground=self.fg_color)
         font_drop["menu"]["activeborderwidth"] = '2'
 
@@ -203,7 +217,21 @@ class App:
               bg=self.bg_color,
               fg=self.fg_color,
               font=(self.font, 14),
-              text=f"Current Output Directory").grid(row=3, column=0, padx=10, pady=5, sticky=E)
+              text="Image Background Color").grid(row=4, column=0, padx=10, pady=5, sticky=E)
+
+        image_bg_drop = OptionMenu(self.right_top_frame, self.image_bg_color, *["Black", "White"])
+        image_bg_drop.config(bg=self.entry_bg_color, font=(self.font, self.button_size), bd=2, fg=self.fg_color)
+        image_bg_drop.grid(row=4, column=1, padx=10, pady=5, sticky=W)
+        image_bg_drop["menu"]["background"] = self.entry_bg_color
+        for x in range(int(image_bg_drop['menu'].index('end')) + 1):
+            image_bg_drop['menu'].entryconfig(x, font=(self.font, 14), foreground=self.fg_color)
+        image_bg_drop["menu"]["activeborderwidth"] = '2'
+
+        Label(master=self.right_top_frame,
+              bg=self.bg_color,
+              fg=self.fg_color,
+              font=(self.font, 14),
+              text=f"Current Output Directory").grid(row=5, column=0, padx=10, pady=5, sticky=E)
 
         output_dir_label = Label(master=self.right_top_frame,
                                  bg=self.bg_color,
@@ -211,7 +239,7 @@ class App:
                                  font=(self.font, 10),
                                  text=self.output_dir,
                                  name='output_dir_label')
-        output_dir_label.grid(row=4, column=0, columnspan=2, padx=10, pady=5, sticky=E)
+        output_dir_label.grid(row=6, column=0, columnspan=2, padx=10, pady=5, sticky=E)
 
         Button(master=self.right_top_frame,
                bg=self.bg_color,
@@ -222,7 +250,7 @@ class App:
                width=15,
                text="Change Directory",
                command=lambda: [output_dir_label.config(text=self.change_output_dir())])\
-            .grid(row=3, column=1, padx=10, pady=5, sticky=W)
+            .grid(row=5, column=1, padx=10, pady=5, sticky=W)
 
         # Buttons
         Button(master=self.right_bottom_frame,
@@ -261,7 +289,7 @@ class App:
 
         # Configure setting_window
         self.setting_window.config(bg=self.bg_color)
-        self.setting_window.minsize(650, 350)
+        self.setting_window.minsize(650, 400)
         self.setting_window.grab_set()
         self.setting_window.mainloop()
 
@@ -269,7 +297,6 @@ class App:
         # If orientation changed refresh the preview window
         if self.direction != self.new_direction.get():
             self.direction = self.new_direction.get()
-            self.show_preview()
 
         # If output directory is changed
         if self.output_dir != self.new_output_dir and self.new_output_dir is not None:
@@ -311,6 +338,8 @@ class App:
             self.change_theme(self.main_panel)
             self.change_theme(self.setting_window, flag='setting_window')
 
+        # Refresh Preview window
+        self.show_preview()
         if window_destroy:
             self.setting_window.destroy()
 
@@ -365,7 +394,7 @@ class App:
         if not self.images:
             return None
         elif len(self.images) == 1:
-            messagebox.showerror("Error", "Please select more than one image")
+            messagebox.showerror(master=self.main_panel, title="Error", message="Please select more than one image")
             return None
         images = [Image.open(x) for x in self.images]
         widths, heights = zip(*(i.size for i in images))
@@ -376,9 +405,16 @@ class App:
             self.final_width = sum(widths)
             self.final_height = max(heights)
 
-            self.new_im = Image.new('RGB', (self.final_width, self.final_height))
+            if self.image_bg_color.get() == 'White':
+                self.new_im = Image.new(mode='RGB', size=(self.final_width, self.final_height), color=(255, 255, 255))
+            elif self.image_bg_color.get() == 'Black':
+                self.new_im = Image.new(mode='RGB', size=(self.final_width, self.final_height), color=(0, 0, 0))
 
             for im in images:
+                if self.mode.get() == 'Stretch':
+                    im = im.resize((im.size[0], self.final_height), Image.ANTIALIAS)
+                elif self.mode.get() == 'Original':
+                    pass
                 self.new_im.paste(im, (x_offset, y_offset))
                 x_offset += im.size[0]
 
@@ -393,9 +429,16 @@ class App:
             self.final_height = sum(heights)
             self.final_width = max(widths)
 
-            self.new_im = Image.new('RGB', (self.final_width, self.final_height))
+            if self.image_bg_color.get() == 'White':
+                self.new_im = Image.new(mode='RGB', size=(self.final_width, self.final_height), color=(255, 255, 255))
+            elif self.image_bg_color.get() == 'Black':
+                self.new_im = Image.new(mode='RGB', size=(self.final_width, self.final_height), color=(0, 0, 0))
 
             for im in images:
+                if self.mode.get() == 'Stretch':
+                    im = im.resize((self.final_width, im.size[1]), Image.ANTIALIAS)
+                elif self.mode.get() == 'Original':
+                    pass
                 self.new_im.paste(im, (x_offset, y_offset))
                 y_offset += im.size[1]
             self.new_im.resize(
@@ -414,7 +457,7 @@ class App:
 
             # Save output image
             self.new_im.save(file_name)
-            messagebox.showinfo("Success", "Combined image is saved!")
+            messagebox.showinfo(master=self.main_panel, title="Success", message="Combined image is saved!")
             self.clear_list_box()
 
         return os.path.join(app_data_location, 'temp.png')
@@ -461,8 +504,11 @@ class App:
 
     def show_preview(self):
         # If any widgets are already there in self.third_right_frame then delete it first
-        for widget in self.third_right_frame.winfo_children():
-            widget.destroy()
+        try:
+            for widget in self.third_right_frame.winfo_children():
+                widget.destroy()
+        except AttributeError:
+            pass
 
         Label(master=self.third_right_frame,
               text='Output Image Preview',
@@ -585,7 +631,13 @@ class App:
 def new_app_instance():
     new_instance = Tk()
     App(new_instance)
+    # Removing temporary files
+    if os.path.exists(os.path.join(app_data_location, 'temp.png')):
+        os.remove(os.path.join(app_data_location, 'temp.png'))
 
 
 if __name__ == '__main__':
     new_app_instance()
+    # Removing temporary files
+    if os.path.exists(os.path.join(app_data_location, 'temp.png')):
+        os.remove(os.path.join(app_data_location, 'temp.png'))
